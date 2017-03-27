@@ -7,16 +7,24 @@ List of key files:
 
 3. Output file for sample-laser-radar-measurement-data-1.txt: /output/output2.txt
 
-In my test run on my local machine, RMSE for sample-laser-radar-measurement-data-1.txt
+In my test run on my local machine, RMSE for sample-laser-radar-measurement-data-1.txtz:
+
 0.065165
+
 0.0605294
+
 0.5497
+
 0.544984
 
-RMSE for sample-laser-radar-measurement-data-2.txt
+RMSE for sample-laser-radar-measurement-data-2.txt:
+
 0.185495
+
 0.190302
+
 0.487137
+
 0.810657
 
 
