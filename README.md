@@ -13,7 +13,7 @@ In my test run on my local machine, RMSE for sample-laser-radar-measurement-data
 0.5497
 0.544984
 
-RMSE for sample-laser-radar-measurement-data-1.txt
+RMSE for sample-laser-radar-measurement-data-2.txt
 0.185495
 0.190302
 0.487137
