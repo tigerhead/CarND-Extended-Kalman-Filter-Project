@@ -43,9 +43,10 @@ void KalmanFilter::Update(const VectorXd &z) {
 
 
     MatrixXd Ht = H_.transpose();
-    MatrixXd S = H_ * P_ * Ht + R_;
-    MatrixXd Si = S.inverse();
     MatrixXd PHt = P_ * Ht;
+    MatrixXd S = H_ * PHt + R_;
+    MatrixXd Si = S.inverse();
+
     MatrixXd K = PHt * Si;
 
    //new estimate
@@ -71,10 +72,15 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
 
        float rho = sqrt(px*px + py*py);
-       float phi = atan2 (py,px);
+       float phi = 0;
        float rho_dot = 0;
 
-       if(rho > 0.0001) // if rhp is zerp set rho_dot to zero
+       if(px < 0.0001 && py < 0.0001) //both px and py are zero
+           phi = 0;
+       else
+           phi = atan2(py, px);
+
+       if(rho > 0.0001) // if rho is zero leave rho_dot as zero
            rho_dot = (px*vx + py*vy)/rho;
 
 
@@ -85,9 +91,10 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
        VectorXd y = z - z_pred;
        MatrixXd Ht = H_.transpose();
-       MatrixXd S = H_ * P_ * Ht + R_;
-       MatrixXd Si = S.inverse();
        MatrixXd PHt = P_ * Ht;
+       MatrixXd S = H_ * PHt + R_;
+       MatrixXd Si = S.inverse();
+
        MatrixXd K = PHt * Si;
 
        //new estimate

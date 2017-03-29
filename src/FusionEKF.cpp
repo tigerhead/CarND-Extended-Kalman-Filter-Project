@@ -45,6 +45,7 @@ FusionEKF::FusionEKF() {
 
 
   ekf_.x_ = VectorXd(4);
+  ekf_.x_ << 1, 1, 1, 1;
 
   //state covariance matrix P
   ekf_.P_ = MatrixXd(4, 4);
@@ -60,9 +61,10 @@ FusionEKF::FusionEKF() {
             0, 0.0225;
 
   //measurement matrix
-  //ekf_.H_ = MatrixXd(2, 4);
-  //ekf_.H_ << 1, 0, 0, 0,
+  ekf_.H_ = MatrixXd(2, 4);
+  ekf_.H_ << 1, 0, 0, 0,
              0, 1, 0, 0;
+
 
   //the initial transition matrix F_
   ekf_.F_ = MatrixXd(4, 4);
@@ -98,7 +100,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     // first measurement
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
-    ekf_.x_ << 1, 1, 1, 1;
+
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       /**
@@ -106,20 +108,24 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       */
         float r = measurement_pack.raw_measurements_[0];
         float phi = measurement_pack.raw_measurements_[1];
-        //Px
-        ekf_.x_[0] =   r * cos(phi);
-        //Py
-        ekf_.x_[1] =   r * sin(phi);
-         cout << "initial position RADAR Measurement: x=" << ekf_.x_[0]  << " y=" << ekf_.x_[1] << endl;
+        float ro_dot = measurement_pack.raw_measurements_[2];
+       // cout << "initialing position RADAR Measurement" << endl;
+
+        ekf_.x_ << r * cos(phi), r * sin(phi), ro_dot * cos(phi), ro_dot * sin(phi);
+        cout << "initial position RADAR Measurement: x=" << ekf_.x_[0]  << " y=" << ekf_.x_[1] << endl;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       /**
       Initialize state.
       */
-       //Px
-       ekf_.x_[0] =   measurement_pack.raw_measurements_[0] ;
-       //Py
-       ekf_.x_[1] =   measurement_pack.raw_measurements_[1] ;
+       //cout << "initialing position LIDAR Measurement" << endl;
+
+       // px =
+       ekf_.x_[0] = measurement_pack.raw_measurements_[0];
+       //py
+       ekf_.x_[1] =measurement_pack.raw_measurements_[1];
+
+
        cout << "initial position LIDAR Measurement: x=" << ekf_.x_[0]  << " y=" << ekf_.x_[1] << endl;
     }
 
@@ -141,29 +147,34 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    */
   //compute the time elapsed between the current and previous measurements
   float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;	//dt - expressed in seconds
-  cout << dt << endl;
-  previous_timestamp_ = measurement_pack.timestamp_;
+  cout << dt << endl;  
+  if(dt > 0.001){ //if two measurements are are approximately coincident in the same time, just use previous state, no predittion is needed
+      cout << "if two measurements are are approximately coincident in the same time, just use previous state, no predittion is needed" << endl;
 
-  float dt_2 = dt * dt;
-  float dt_3 = dt_2 * dt;
-  float dt_4 = dt_3 * dt;
 
-  //Modify the F matrix so that the time is integrated
-  ekf_.F_(0, 2) = dt;
-  ekf_.F_(1, 3) = dt;
 
-  ekf_.Q_ = MatrixXd(4, 4);
+      previous_timestamp_ = measurement_pack.timestamp_;
+      float dt_2 = dt * dt;
+      float dt_3 = dt_2 * dt;
+      float dt_4 = dt_3 * dt;
 
-  ekf_.Q_ <<  dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
-              0, dt_4/4*noise_ay, 0, dt_3/2*noise_ay,
-              dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
-              0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
- // cout << "Do prediction" << endl;
+      //Modify the F matrix so that the time is integrated
+      ekf_.F_(0, 2) = dt;
+      ekf_.F_(1, 3) = dt;
 
-  ekf_.Predict();
+      ekf_.Q_ = MatrixXd(4, 4);
 
- // cout << "Prediction Done" << endl;
- // cout << "x_ = " << ekf_.x_ << endl;
+      ekf_.Q_ <<  dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
+                 0, dt_4/4*noise_ay, 0, dt_3/2*noise_ay,
+                 dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
+                 0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
+       // cout << "Do prediction" << endl;
+
+      ekf_.Predict();
+
+       // cout << "Prediction Done" << endl;
+      // cout << "x_ = " << ekf_.x_ << endl;
+  }
 
   /*****************************************************************************
    *  Update
@@ -204,6 +215,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   // print the output
   cout << "x_ = " << ekf_.x_ << endl;
   cout << "P_ = " << ekf_.P_ << endl;
+
 }
 
 
